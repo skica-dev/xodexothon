@@ -1,5 +1,8 @@
 import argparse
 import os
+import re
+from datetime import datetime
+from subprocess import call, DEVNULL
 
 import PyPDF2
 import requests
@@ -46,11 +49,28 @@ def add_coupon(source, destination):
     :param source: source of the copied coupon
     :param destination: destination of the master file of coupons
     """
+    if not check_date(source):
+        return
     with open(source, "rb") as f:
         coupon_reader = PyPDF2.PdfFileReader(f)
         page = coupon_reader.getPage(0)
         coupons_writer.addPage(page)
         save_coupons(destination)
+
+
+def check_date(coupon):
+    """
+    checks if coupon has expired
+    :param coupon: coupon pdf path
+    :return: True if coupon is not expired
+    """
+    call(["ebook-convert", coupon, "txt_temp.txt"], stdout=DEVNULL)
+    with open("txt_temp.txt") as f:
+        text = f.read()
+        date = re.search("Ważny.* do (.*) r\.", text)
+        expires = date.groups()[0]
+        exp_date = datetime.strptime(expires, "%d.%m.%Y")
+        return exp_date > datetime.now()
 
 
 def save_coupons(destination):
