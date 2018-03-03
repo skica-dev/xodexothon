@@ -2,7 +2,7 @@ import argparse
 import os
 import re
 from datetime import datetime
-from subprocess import call
+from subprocess import call, DEVNULL
 
 import PyPDF2
 import requests
@@ -63,7 +63,7 @@ def check_date(coupon):
     :param coupon: coupon pdf path
     :return: True if coupon is not expired
     """
-    call(["ebook-convert", coupon, "txt_temp.txt"])
+    call(["ebook-convert", coupon, "txt_temp.txt"], stdout=DEVNULL)
     with open("txt_temp.txt") as f:
         text = f.read()
         date = re.search("Ważny.* do (.*) r\.", text)
