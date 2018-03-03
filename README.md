@@ -1,4 +1,5 @@
 #Sodexothon (Sodexo + Python)
+
 Automatyczne, masowe pobieranie kuponów z Sodexo.
 Gotowe kupony znajdują się w coupons/coupons.pdf.
 
