@@ -2,7 +2,7 @@ import argparse
 import os
 import re
 from datetime import datetime
-from subprocess import call, DEVNULL
+from subprocess import call
 
 import PyPDF2
 import requests
@@ -49,12 +49,11 @@ def add_coupon(source, destination):
     :param source: source of the copied coupon
     :param destination: destination of the master file of coupons
     """
-    if not check_date(source):
-        return
     with open(source, "rb") as f:
         coupon_reader = PyPDF2.PdfFileReader(f)
         page = coupon_reader.getPage(0)
-        coupons_writer.addPage(page)
+        if check_date(source):
+            coupons_writer.addPage(page)
         save_coupons(destination)
 
 
@@ -64,12 +63,13 @@ def check_date(coupon):
     :param coupon: coupon pdf path
     :return: True if coupon is not expired
     """
-    call(["ebook-convert", coupon, "txt_temp.txt"], stdout=DEVNULL)
+    call(["ebook-convert", coupon, "txt_temp.txt"])
     with open("txt_temp.txt") as f:
         text = f.read()
         date = re.search("Ważny.* do (.*) r\.", text)
         expires = date.groups()[0]
         exp_date = datetime.strptime(expires, "%d.%m.%Y")
+        print(coupon, exp_date)
         return exp_date > datetime.now()
 
 
@@ -92,8 +92,9 @@ if __name__ == "__main__":
     except OSError:
         pass
 
-    for i in range(arg.coupons):
+    for i in range(arg.coupons + 1):
+        print(i)
         coup = fetch_coupon(i)
         if check_coupon(coup):
-            save_coupon(coup, os.path.join(os.pardir, "coupons", "coupon{}.pdf".format(i)),
+            save_coupon(coup, os.path.join(os.pardir, "coupons", "coupon{:02d}.pdf".format(i)),
                         os.path.join(os.pardir, "coupons", "coupons.pdf"))
